@@ -3,564 +3,995 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Dashboard de avance de captura de datos" />
+  <meta name="description" content="Dashboard de avance de captura con filtro por AREA y visor geografico" />
   <title>Dashboard | Avance de Captura</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
   <style>
     :root {
-      --bg: #1c0a12;
-      --bg-2: #2b0f1b;
-      --panel: rgba(50, 18, 30, 0.8);
-      --panel-strong: #3a1524;
-      --line: rgba(255, 255, 255, 0.08);
-      --text: #edf4ff;
-      --muted: #d5b4c2;
-      --accent: #a83a5e;
-      --accent-2: #7a2141;
-      --warn: #ffd37a;
-      --danger: #ff8ea0;
-      --good: #96e2b8;
-      --shadow: 0 18px 60px rgba(0, 0, 0, 0.35);
-      --radius: 22px;
-      --radius-sm: 16px;
-      --max: 1320px;
-      font-synthesis-weight: none;
-      color-scheme: dark;
+      --bg: #f6f3f5;
+      --bg-soft: #fffdfd;
+      --panel: #ffffff;
+      --panel-alt: #fdf8fa;
+      --line: #eadde2;
+      --text: #37262e;
+      --muted: #775d68;
+      --wine-1: #6b2f46;
+      --wine-2: #874860;
+      --wine-3: #a6687f;
+      --good: #2f8c67;
+      --warn: #b57a12;
+      --bad: #b44963;
+      --shadow: 0 14px 38px rgba(80, 40, 55, 0.12);
+      --radius: 18px;
+      --max: 1360px;
     }
 
     * { box-sizing: border-box; }
     html, body { margin: 0; min-height: 100%; }
     body {
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-family: "Segoe UI", "Source Sans 3", system-ui, sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top left, rgba(168, 58, 94, 0.22), transparent 28%),
-        radial-gradient(circle at 80% 10%, rgba(122, 33, 65, 0.26), transparent 24%),
-        linear-gradient(180deg, var(--bg), var(--bg-2));
-      background-attachment: fixed;
+        radial-gradient(circle at 15% 0%, rgba(166, 104, 127, 0.18), transparent 30%),
+        radial-gradient(circle at 90% 2%, rgba(107, 47, 70, 0.12), transparent 28%),
+        linear-gradient(180deg, #fcf9fb, var(--bg));
     }
 
     .wrap {
-      width: min(100% - 32px, var(--max));
+      width: min(100% - 28px, var(--max));
       margin: 0 auto;
-      padding: 28px 0 40px;
+      padding: 22px 0 26px;
+      display: grid;
+      gap: 14px;
     }
 
     .hero {
-      position: relative;
-      overflow: hidden;
       border: 1px solid var(--line);
-      border-radius: 30px;
-      padding: 28px;
-      background: linear-gradient(135deg, rgba(58, 21, 36, 0.97), rgba(28, 10, 18, 0.93));
+      background: linear-gradient(135deg, #fffefe, #fdf7fa);
+      border-radius: 24px;
       box-shadow: var(--shadow);
+      padding: 18px;
+      display: grid;
+      gap: 12px;
     }
 
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: auto -100px -120px auto;
-      width: 320px;
-      height: 320px;
-      background: radial-gradient(circle, rgba(168, 58, 94, 0.24), transparent 62%);
-      filter: blur(12px);
-      pointer-events: none;
-    }
-
-    .topline {
+    .hero-head {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 24px;
+      align-items: start;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
     .brand {
       display: flex;
       align-items: center;
-      gap: 14px;
+      gap: 10px;
     }
 
     .mark {
-      width: 48px;
-      height: 48px;
-      border-radius: 15px;
-      background: linear-gradient(135deg, var(--accent), var(--accent-2));
-      box-shadow: 0 12px 30px rgba(168, 58, 94, 0.35);
-      position: relative;
-    }
-
-    .mark::before {
-      content: "";
-      position: absolute;
-      inset: 11px;
-      border-radius: 11px;
-      border: 2px solid rgba(255, 255, 255, 0.55);
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: linear-gradient(130deg, var(--wine-1), var(--wine-3));
+      box-shadow: 0 8px 20px rgba(107, 47, 70, 0.22);
     }
 
     .eyebrow {
-      font-size: 0.82rem;
-      letter-spacing: 0.18em;
+      font-size: 0.76rem;
       text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 6px;
+      letter-spacing: 0.14em;
+      color: var(--wine-2);
+      margin-bottom: 4px;
+      font-weight: 700;
     }
 
     h1 {
       margin: 0;
-      font-size: clamp(2rem, 4vw, 3.6rem);
-      line-height: 1.02;
-      letter-spacing: -0.04em;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      line-height: 1.06;
+      letter-spacing: -0.02em;
+      color: #432531;
     }
 
     .subtitle {
-      margin: 12px 0 0;
-      max-width: 72ch;
+      margin: 2px 0 0;
       color: var(--muted);
-      line-height: 1.6;
-      font-size: 1rem;
+      font-size: 0.96rem;
+      line-height: 1.5;
+      max-width: 88ch;
     }
 
-    .status-pill {
+    .source-box {
+      display: grid;
+      gap: 8px;
+      min-width: min(100%, 460px);
+    }
+
+    .source-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+    }
+
+    .source-row input,
+    .source-row button,
+    select {
+      border-radius: 12px;
+      border: 1px solid #d8c5cc;
+      padding: 9px 11px;
+      font: inherit;
+      background: #fff;
+      color: var(--text);
+    }
+
+    .source-row button {
+      border-color: var(--wine-2);
+      color: #fff;
+      background: linear-gradient(125deg, var(--wine-1), var(--wine-2));
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .status {
+      border-radius: 999px;
+      padding: 6px 10px;
       display: inline-flex;
       align-items: center;
-      gap: 10px;
-      border: 1px solid rgba(113, 224, 138, 0.35);
-      color: #c7f5d0;
-      background: rgba(113, 224, 138, 0.08);
-      padding: 10px 14px;
-      border-radius: 999px;
-      font-size: 0.92rem;
-      white-space: nowrap;
+      gap: 7px;
+      width: fit-content;
+      font-size: 0.84rem;
+      border: 1px solid #d8c5cc;
+      color: var(--muted);
+      background: #fff;
     }
 
     .status-dot {
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       border-radius: 50%;
-      background: var(--good);
-      box-shadow: 0 0 0 6px rgba(113, 224, 138, 0.12);
+      background: #a38b95;
     }
 
-    .grid {
+    .status.ok {
+      border-color: rgba(47, 140, 103, 0.25);
+      color: #276f53;
+      background: rgba(47, 140, 103, 0.07);
+    }
+
+    .status.ok .status-dot { background: var(--good); }
+    .status.bad {
+      border-color: rgba(180, 73, 99, 0.28);
+      color: #8f304b;
+      background: rgba(180, 73, 99, 0.08);
+    }
+    .status.bad .status-dot { background: var(--bad); }
+
+    .summary-grid {
       display: grid;
-      gap: 18px;
-      margin-top: 18px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
     }
 
-    .cards {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-    }
-
-    .card {
-      background: var(--panel);
+    .sum-card {
+      border-radius: 14px;
       border: 1px solid var(--line);
-      border-radius: var(--radius);
-      padding: 18px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(12px);
+      background: linear-gradient(160deg, #fff, #fdf7f9);
+      padding: 12px;
     }
 
-    .card .label {
+    .sum-label {
       color: var(--muted);
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       text-transform: uppercase;
-      letter-spacing: 0.12em;
-      margin-bottom: 10px;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+      font-weight: 700;
     }
 
-    .card .value {
-      font-size: clamp(1.8rem, 4vw, 2.5rem);
+    .sum-value {
+      font-size: clamp(1.35rem, 2.7vw, 2rem);
       font-weight: 800;
-      letter-spacing: -0.04em;
+      letter-spacing: -0.03em;
+      color: #4a2835;
       line-height: 1;
     }
 
-    .card .hint {
-      margin-top: 10px;
+    .sum-hint {
+      margin-top: 6px;
       color: var(--muted);
-      font-size: 0.92rem;
+      font-size: 0.84rem;
     }
 
-    .split {
-      grid-template-columns: 1.45fr 0.95fr;
-      align-items: start;
-    }
-
-    .panel-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      margin-bottom: 14px;
-    }
-
-    .panel-title h2 {
-      margin: 0;
-      font-size: 1.08rem;
-      letter-spacing: -0.02em;
-    }
-
-    .panel-title .small {
-      color: var(--muted);
-      font-size: 0.9rem;
-    }
-
-    .stack {
+    .progress-wrap {
+      margin-top: 8px;
       display: grid;
-      gap: 14px;
-    }
-
-    .progress-row {
-      display: grid;
-      gap: 8px;
-      margin-bottom: 14px;
+      gap: 7px;
     }
 
     .progress-head {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      gap: 12px;
+      font-size: 0.9rem;
       color: var(--muted);
-      font-size: 0.95rem;
     }
 
     .bar {
       height: 14px;
+      border: 1px solid #e7dce1;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
       overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #fff;
     }
 
     .bar > span {
       display: block;
       height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      box-shadow: 0 10px 30px rgba(168, 58, 94, 0.3);
-      transition: width 0.5s ease;
+      width: 0;
+      background: linear-gradient(90deg, var(--wine-2), var(--wine-3));
+      transition: width 320ms ease;
     }
 
-    .list {
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 14px;
       display: grid;
-      gap: 12px;
-    }
-
-    .list-item {
-      display: grid;
-      grid-template-columns: 1fr auto;
       gap: 10px;
-      padding: 14px 16px;
-      border-radius: 18px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.06);
     }
 
-    .list-item strong { display: block; font-size: 0.98rem; }
-    .list-item span { color: var(--muted); font-size: 0.9rem; }
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      padding: 7px 10px;
-      border-radius: 999px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      align-self: start;
-      white-space: nowrap;
+    .panel-title {
+      margin: 0;
+      font-size: 1rem;
+      letter-spacing: -0.01em;
+      color: #4a2835;
     }
 
-    .tag.good { background: rgba(113, 224, 138, 0.14); color: #c8f7d1; }
-    .tag.warn { background: rgba(255, 207, 90, 0.14); color: #ffe4a0; }
-    .tag.bad { background: rgba(255, 107, 122, 0.14); color: #ffb7c0; }
-    .tag.info { background: rgba(168, 58, 94, 0.16); color: #ffd9e4; }
-
-    .chart {
-      display: grid;
-      gap: 12px;
-      margin-top: 8px;
-    }
-
-    .barline {
-      display: grid;
-      grid-template-columns: 110px 1fr 58px;
-      gap: 12px;
-      align-items: center;
-    }
-
-    .barline .name {
-      color: var(--text);
-      font-size: 0.92rem;
-    }
-
-    .barline .track {
-      height: 12px;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.08);
-      overflow: hidden;
-    }
-
-    .barline .fill {
-      height: 100%;
-      border-radius: inherit;
-      background: linear-gradient(90deg, rgba(77, 214, 197, 0.95), rgba(124, 140, 255, 0.95));
-    }
-
-    .barline .num {
-      text-align: right;
+    .subtext {
       color: var(--muted);
       font-size: 0.9rem;
     }
 
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(180px, 300px) 1fr;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .control-box {
+      display: grid;
+      gap: 6px;
+    }
+
+    .transition-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .bars {
+      display: grid;
+      gap: 8px;
+    }
+
+    .barline {
+      display: grid;
+      grid-template-columns: 115px 1fr 58px;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .barline .name { font-size: 0.9rem; color: #5b3b48; }
+    .barline .track {
+      height: 10px;
+      border-radius: 999px;
+      background: #f2e9ed;
+      overflow: hidden;
+    }
+    .barline .fill {
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--wine-2), #c58ea3);
+    }
+    .barline .num { text-align: right; color: var(--muted); font-size: 0.87rem; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      overflow: hidden;
+      border-radius: 12px;
+      border: 1px solid #efe2e7;
+      background: #fff;
+    }
+
+    th, td {
+      padding: 9px 10px;
+      text-align: left;
+      border-bottom: 1px solid #f2e8ec;
+      font-size: 0.9rem;
+    }
+
+    th {
+      color: #5a3543;
+      background: #fdf6f9;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .muted { color: var(--muted); }
+
+    #map {
+      height: min(58vh, 560px);
+      border-radius: 14px;
+      border: 1px solid #e6d6dd;
+      overflow: hidden;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border: 1px solid #eadde2;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      color: #664551;
+      background: #fff;
+    }
+
+    .swatch {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid rgba(60, 45, 50, 0.25);
+    }
+
     .footer {
-      margin-top: 18px;
       color: var(--muted);
-      font-size: 0.88rem;
+      font-size: 0.82rem;
       text-align: center;
+      margin-top: 3px;
     }
 
-    .fade-in {
-      animation: fadeIn 420ms ease both;
+    .leaflet-control-layers {
+      border-radius: 12px;
+      border: 1px solid #e4d3db;
+      box-shadow: 0 8px 24px rgba(80, 40, 55, 0.14);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @media (max-width: 1024px) {
-      .cards, .split { grid-template-columns: 1fr 1fr; }
-      .split { grid-template-columns: 1fr; }
-    }
-
-    @media (max-width: 720px) {
-      .wrap { width: min(100% - 20px, var(--max)); padding-top: 16px; }
-      .topline { flex-direction: column; align-items: start; }
-      .cards, .split { grid-template-columns: 1fr; }
+    @media (max-width: 980px) {
+      .summary-grid { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr; }
+      .transition-layout { grid-template-columns: 1fr; }
       .barline { grid-template-columns: 1fr; }
       .barline .num { text-align: left; }
-      .hero { padding: 20px; border-radius: 24px; }
     }
   </style>
 </head>
 <body>
   <main class="wrap">
-    <section class="hero fade-in">
-      <div class="topline">
-        <div class="brand">
-          <div class="mark" aria-hidden="true"></div>
-          <div>
-            <div class="eyebrow">GeomaticaAO</div>
-            <h1>Dashboard de avance de captura</h1>
+    <section class="hero">
+      <div class="hero-head">
+        <div>
+          <div class="brand">
+            <div class="mark" aria-hidden="true"></div>
+            <div>
+              <div class="eyebrow">GeomaticaAO</div>
+              <h1>Dashboard de avance de captura</h1>
+            </div>
           </div>
+          <p class="subtitle">
+            Resumen operativo con enlace robusto a datos de consolidado, filtro por AREA, analitica por transicion
+            y visor geografico con capas de secciones y colonias.
+          </p>
         </div>
-        <div class="status-pill" id="syncStatus">
-          <span class="status-dot"></span>
-          <span>Preparado para publicar en GitHub Pages</span>
+
+        <div class="source-box">
+          <div class="source-row">
+            <input id="sourceInput" type="url" placeholder="URL del avance.json en otro repositorio (opcional)" />
+            <button id="saveSourceBtn" type="button">Conectar</button>
+          </div>
+          <div class="status" id="syncStatus"><span class="status-dot"></span><span>Preparando carga de datos...</span></div>
         </div>
       </div>
-      <p class="subtitle">
-        Vista ejecutiva para monitorear el avance de captura, pendientes, sincronización y distribución de registros por área.
-        Esta página puede vivir como sitio estático en GitHub Pages y, si después lo necesitas, puede leer datos desde <strong>avance.json</strong>.
-      </p>
-    </section>
 
-    <section class="grid cards fade-in" id="cards"></section>
-
-    <section class="grid split fade-in">
-      <article class="card">
-        <div class="panel-title">
-          <h2>Avance general</h2>
-          <div class="small" id="updatedAt">Actualizado: --</div>
-        </div>
-        <div class="progress-row">
-          <div class="progress-head">
-            <span>Captura total</span>
-            <strong id="progressText">0%</strong>
+      <section class="summary-grid">
+        <article class="sum-card">
+          <div class="sum-label">Total de registros</div>
+          <div class="sum-value" id="kpiTotal">0</div>
+          <div class="sum-hint" id="kpiTotalHint">Registros visibles</div>
+        </article>
+        <article class="sum-card">
+          <div class="sum-label">Meta de registros</div>
+          <div class="sum-value" id="kpiMeta">0</div>
+          <div class="sum-hint" id="kpiMetaHint">Meta aplicada</div>
+        </article>
+        <article class="sum-card">
+          <div class="sum-label">Porcentaje de avance</div>
+          <div class="sum-value" id="kpiPct">0%</div>
+          <div class="progress-wrap">
+            <div class="progress-head">
+              <span>Progreso</span>
+              <span id="progressText">0%</span>
+            </div>
+            <div class="bar"><span id="progressBar"></span></div>
           </div>
-          <div class="bar"><span id="progressBar" style="width:0%"></span></div>
-        </div>
-        <div class="list" id="areasList"></div>
-      </article>
-
-      <article class="card">
-        <div class="panel-title">
-          <h2>Distribución por estatus</h2>
-          <div class="small">Vista rápida</div>
-        </div>
-        <div class="chart" id="statusChart"></div>
-      </article>
+        </article>
+      </section>
     </section>
 
-    <section class="grid split fade-in" style="margin-top:18px;">
-      <article class="card">
-        <div class="panel-title">
-          <h2>Alertas operativas</h2>
-          <div class="small">Señales a revisar</div>
-        </div>
-        <div class="list" id="alertsList"></div>
-      </article>
-
-      <article class="card">
-        <div class="panel-title">
-          <h2>Top áreas</h2>
-          <div class="small">Mayor volumen capturado</div>
-        </div>
-        <div class="chart" id="topAreasChart"></div>
-      </article>
+    <section class="panel controls">
+      <div class="control-box">
+        <label for="areaFilter" class="subtext">Filtrar por AREA</label>
+        <select id="areaFilter">
+          <option value="__ALL__">Todos</option>
+        </select>
+      </div>
+      <div class="subtext" id="filterSummary">Sin datos cargados.</div>
     </section>
 
-    <div class="footer">
-      Dashboard estático listo para GitHub Pages. Si quieres, el siguiente paso es conectar un archivo <strong>avance.json</strong> con datos reales.
-    </div>
+    <section class="panel">
+      <h2 class="panel-title">Registros por Transicion</h2>
+      <div class="transition-layout">
+        <div class="bars" id="transitionBars"></div>
+        <div>
+          <table>
+            <thead>
+              <tr>
+                <th>Transicion</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody id="transitionTable"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">Visor de mapa</h2>
+      <div class="subtext">Puntos por AREA y capas geograficas con encendido/apagado: secciones.geojson y ut_colonias.geojson.</div>
+      <div class="legend" id="areaLegend"></div>
+      <div id="map" role="application" aria-label="Mapa de registros"></div>
+    </section>
+
+    <div class="footer" id="updatedAt">Actualizado: --</div>
   </main>
 
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
   <script>
-    const fmt = new Intl.NumberFormat('es-MX');
-    const pct = (value) => Math.max(0, Math.min(100, Math.round(value)));
+    const fmt = new Intl.NumberFormat("es-MX");
+    const pct = (value) => Math.max(0, Math.min(100, Math.round(Number(value) || 0)));
+    const SOURCE_STORAGE_KEY = "dashboardDataSource";
+    const DEFAULT_REMOTE_SOURCE = "";
 
-    async function loadData() {
-      const response = await fetch('./avance.json', { cache: 'no-store' });
-      if (!response.ok) {
-        throw new Error(`No se pudo leer avance.json (HTTP ${response.status}).`);
+    const state = {
+      rawData: null,
+      rows: [],
+      areasMeta: [],
+      selectedArea: "__ALL__",
+      map: null,
+      mapLayers: {
+        points: null,
+        secciones: null,
+        colonias: null,
+        control: null,
+        base: null
+      },
+      areaColorMap: new Map(),
+      activeSource: ""
+    };
+
+    function normalizeText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .trim();
+    }
+
+    function asNumber(value, fallback = 0) {
+      if (value === null || value === undefined || value === "") return fallback;
+      const cleaned = String(value).replace(/,/g, "").trim();
+      const num = Number(cleaned);
+      return Number.isFinite(num) ? num : fallback;
+    }
+
+    function getValueByAliases(obj, aliases, fallback = "") {
+      if (!obj || typeof obj !== "object") return fallback;
+      const keys = Object.keys(obj);
+      for (const alias of aliases) {
+        const normalizedAlias = normalizeText(alias);
+        const key = keys.find((k) => normalizeText(k) === normalizedAlias);
+        if (key !== undefined && obj[key] !== undefined && obj[key] !== null && obj[key] !== "") {
+          return obj[key];
+        }
       }
-      return await response.json();
+      return fallback;
     }
 
-    function cardMarkup(label, value, hint) {
-      return `
-        <article class="card fade-in">
-          <div class="label">${label}</div>
-          <div class="value">${value}</div>
-          <div class="hint">${hint}</div>
-        </article>
-      `;
+    function uniq(values) {
+      return [...new Set(values)];
     }
 
-    function renderBars(container, rows, valueKey) {
-      container.innerHTML = rows.map((row) => {
-        const value = Number(row[valueKey] || 0);
-        const max = Math.max(...rows.map((item) => Number(item[valueKey] || 0)), 1);
-        const width = Math.max(8, Math.round((value / max) * 100));
-        return `
-          <div class="barline">
-            <div class="name">${row.nombre}</div>
-            <div class="track"><div class="fill" style="width:${width}%"></div></div>
-            <div class="num">${fmt.format(value)}</div>
-          </div>
-        `;
-      }).join('');
+    function buildSourceCandidates() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const querySource = urlParams.get("dataUrl") || "";
+      const savedSource = localStorage.getItem(SOURCE_STORAGE_KEY) || "";
+      const userTyped = document.getElementById("sourceInput").value.trim();
+      const candidates = [
+        userTyped,
+        querySource,
+        savedSource,
+        DEFAULT_REMOTE_SOURCE,
+        "./avance.json"
+      ]
+        .map((item) => normalizeGithubRawUrl(item))
+        .filter(Boolean);
+
+      return uniq(candidates);
     }
 
-    function renderErrorState(message) {
-      const cards = document.getElementById('cards');
-      const progressText = document.getElementById('progressText');
-      const progressBar = document.getElementById('progressBar');
-      const updatedAt = document.getElementById('updatedAt');
-      const syncStatus = document.getElementById('syncStatus');
-      const areasList = document.getElementById('areasList');
-      const statusChart = document.getElementById('statusChart');
-      const alertsList = document.getElementById('alertsList');
-      const topAreasChart = document.getElementById('topAreasChart');
-
-      cards.innerHTML = [
-        cardMarkup('Error de datos', 'Sin avance.json', 'Ejecuta Consolidar Capturas y publica Dashboard para cargar datos reales.')
-      ].join('');
-
-      progressText.textContent = '0%';
-      progressBar.style.width = '0%';
-      updatedAt.textContent = 'Actualizado: sin datos';
-      syncStatus.innerHTML = '<span class="status-dot"></span><span>Sin datos de consolidado</span>';
-
-      areasList.innerHTML = '';
-      statusChart.innerHTML = '';
-      topAreasChart.innerHTML = '';
-      alertsList.innerHTML = `
-        <div class="list-item">
-          <div>
-            <strong>Falta avance.json</strong>
-            <span>${message}</span>
-          </div>
-          <span class="tag bad">ERROR</span>
-        </div>
-      `;
+    function normalizeGithubRawUrl(input) {
+      const url = String(input || "").trim();
+      if (!url) return "";
+      if (!url.includes("github.com/")) return url;
+      const blobPattern = /https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/([^/]+)\/(.+)$/i;
+      const match = url.match(blobPattern);
+      if (match) {
+        const [, owner, repo, branch, path] = match;
+        return `https://raw.githubusercontent.com/${owner}/${repo}/${branch}/${path}`;
+      }
+      return url;
     }
 
-    async function main() {
-      let data;
+    async function fetchWithTimeout(url, timeoutMs = 12000) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        data = await loadData();
-      } catch (error) {
-        renderErrorState(String(error?.message || 'No se pudo cargar avance.json.'));
+        const response = await fetch(url, { cache: "no-store", signal: controller.signal });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        return await response.json();
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+
+    async function fetchWithRetry(url, attempts = 3) {
+      let lastError = null;
+      for (let i = 1; i <= attempts; i += 1) {
+        try {
+          return await fetchWithTimeout(url, 12000 + i * 2500);
+        } catch (error) {
+          lastError = error;
+        }
+      }
+      throw lastError;
+    }
+
+    function getRowsFromData(data) {
+      const candidates = [
+        data?.consolidado,
+        data?.registros,
+        data?.rows,
+        data?.data,
+        data?.capturas
+      ];
+      const rows = candidates.find((item) => Array.isArray(item));
+      return Array.isArray(rows) ? rows : [];
+    }
+
+    function normalizeRow(raw) {
+      const area = String(getValueByAliases(raw, ["area", "AREA", "zona", "ut", "unidad territorial"], "Sin AREA")).trim() || "Sin AREA";
+      const transi = String(getValueByAliases(raw, ["transi", "transicion", "transicion_actual", "Transicion"], "Sin transicion")).trim() || "Sin transicion";
+      let lat = asNumber(getValueByAliases(raw, ["lat", "latitude", "latitud", "y", "coordenada_y"], ""), NaN);
+      let lon = asNumber(getValueByAliases(raw, ["lon", "lng", "long", "longitude", "longitud", "x", "coordenada_x"], ""), NaN);
+
+      if (Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) > 90 && Math.abs(lon) <= 90) {
+        const tmp = lat;
+        lat = lon;
+        lon = tmp;
+      }
+
+      const hasPoint = Number.isFinite(lat) && Number.isFinite(lon) && Math.abs(lat) <= 90 && Math.abs(lon) <= 180;
+
+      return {
+        area,
+        transi,
+        lat: hasPoint ? lat : null,
+        lon: hasPoint ? lon : null,
+        source: raw
+      };
+    }
+
+    function buildAreaMeta(data) {
+      if (!Array.isArray(data?.areas)) return [];
+      return data.areas.map((item) => ({
+        nombre: String(item?.nombre || "").trim(),
+        programado: asNumber(item?.programado, 0),
+        capturado: asNumber(item?.capturado, 0)
+      })).filter((item) => item.nombre);
+    }
+
+    function getMetaForArea(areaName, fallbackMeta) {
+      if (areaName === "__ALL__") return fallbackMeta;
+      const areaMeta = state.areasMeta.find((item) => item.nombre === areaName);
+      if (areaMeta && areaMeta.programado > 0) return areaMeta.programado;
+      return Math.max(fallbackMeta, 0);
+    }
+
+    function groupByTransition(rows) {
+      const counter = new Map();
+      for (const row of rows) {
+        const key = row.transi || "Sin transicion";
+        counter.set(key, (counter.get(key) || 0) + 1);
+      }
+      return [...counter.entries()]
+        .map(([transi, total]) => ({ transi, total }))
+        .sort((a, b) => b.total - a.total || a.transi.localeCompare(b.transi));
+    }
+
+    function colorFromArea(area) {
+      if (state.areaColorMap.has(area)) return state.areaColorMap.get(area);
+      const palette = ["#5f2f43", "#7f3f58", "#a05570", "#bf728d", "#4f637f", "#3f7a6e", "#8d5a4c", "#7f627f"];
+      const index = state.areaColorMap.size % palette.length;
+      const color = palette[index];
+      state.areaColorMap.set(area, color);
+      return color;
+    }
+
+    function setStatus(type, text) {
+      const node = document.getElementById("syncStatus");
+      node.className = `status ${type}`;
+      node.innerHTML = `<span class="status-dot"></span><span>${text}</span>`;
+    }
+
+    function renderAreaFilter() {
+      const selector = document.getElementById("areaFilter");
+      const current = state.selectedArea;
+      const areas = uniq(state.rows.map((row) => row.area)).sort((a, b) => a.localeCompare(b, "es"));
+      selector.innerHTML = [
+        '<option value="__ALL__">Todos</option>',
+        ...areas.map((area) => `<option value="${escapeHtml(area)}">${escapeHtml(area)}</option>`)
+      ].join("");
+
+      if (areas.includes(current)) {
+        selector.value = current;
+      } else {
+        selector.value = "__ALL__";
+        state.selectedArea = "__ALL__";
+      }
+    }
+
+    function getFilteredRows() {
+      if (state.selectedArea === "__ALL__") return state.rows;
+      return state.rows.filter((row) => row.area === state.selectedArea);
+    }
+
+    function renderSummary() {
+      const filteredRows = getFilteredRows();
+      const totalAll = state.rows.length;
+      const totalFiltered = filteredRows.length;
+      const globalMeta = asNumber(state.rawData?.total_programado, totalAll);
+      const meta = getMetaForArea(state.selectedArea, globalMeta);
+      const percent = meta > 0 ? pct((totalFiltered / meta) * 100) : 0;
+
+      document.getElementById("kpiTotal").textContent = fmt.format(totalFiltered);
+      document.getElementById("kpiMeta").textContent = fmt.format(meta);
+      document.getElementById("kpiPct").textContent = `${percent}%`;
+      document.getElementById("progressText").textContent = `${percent}%`;
+      document.getElementById("progressBar").style.width = `${percent}%`;
+      document.getElementById("kpiTotalHint").textContent = state.selectedArea === "__ALL__"
+        ? `Total consolidado (${fmt.format(totalAll)} registros).`
+        : `Registros visibles en AREA ${state.selectedArea}.`;
+      document.getElementById("kpiMetaHint").textContent = state.selectedArea === "__ALL__"
+        ? "Meta global de registros."
+        : "Meta para el AREA seleccionado (si existe).";
+
+      document.getElementById("filterSummary").textContent = state.selectedArea === "__ALL__"
+        ? `Mostrando todas las AREAS (${fmt.format(totalFiltered)} registros).`
+        : `Mostrando AREA ${state.selectedArea} (${fmt.format(totalFiltered)} registros).`;
+
+      const generatedAt = state.rawData?.generated_at
+        ? new Date(state.rawData.generated_at)
+        : new Date();
+      document.getElementById("updatedAt").textContent = `Actualizado: ${generatedAt.toLocaleString("es-MX")}`;
+    }
+
+    function renderTransitions() {
+      const transitionRows = groupByTransition(getFilteredRows());
+      const max = Math.max(...transitionRows.map((item) => item.total), 1);
+
+      const barsNode = document.getElementById("transitionBars");
+      const tableNode = document.getElementById("transitionTable");
+
+      if (transitionRows.length === 0) {
+        barsNode.innerHTML = '<div class="muted">Sin registros para el filtro actual.</div>';
+        tableNode.innerHTML = '<tr><td class="muted" colspan="2">Sin datos</td></tr>';
         return;
       }
 
-      const totalProgramado = Number(data.total_programado || 0);
-      const totalCapturado = Number(data.total_capturado || 0);
-      const totalPendiente = Number(data.total_pendiente || Math.max(totalProgramado - totalCapturado, 0));
-      const totalSincronizado = Number(data.total_sincronizado || 0);
-      const totalEnProgreso = Number(data.total_en_progreso || 0);
-      const avance = totalProgramado > 0 ? pct((totalCapturado / totalProgramado) * 100) : 0;
-
-      const cards = document.getElementById('cards');
-      cards.innerHTML = [
-        cardMarkup('Programado', fmt.format(totalProgramado), 'Total esperado en el corte actual.'),
-        cardMarkup('Capturado', fmt.format(totalCapturado), 'Registros ya levantados.'),
-        cardMarkup('Sincronizado', fmt.format(totalSincronizado), 'Registros ya enviados al repositorio.'),
-        cardMarkup('Pendiente', fmt.format(totalPendiente), 'Registros aún por completar o subir.')
-      ].join('');
-
-      document.getElementById('progressText').textContent = `${avance}%`;
-      document.getElementById('progressBar').style.width = `${avance}%`;
-      document.getElementById('updatedAt').textContent = `Actualizado: ${new Date(data.generated_at || Date.now()).toLocaleString('es-MX')}`;
-      document.getElementById('syncStatus').innerHTML = `<span class="status-dot"></span><span>${totalEnProgreso} en captura / ${data.total_alertas || 0} alertas activas</span>`;
-
-      const areasList = document.getElementById('areasList');
-      const areas = Array.isArray(data.areas) ? data.areas : [];
-      areasList.innerHTML = areas.slice(0, 5).map((area) => {
-        const areaPct = area.programado > 0 ? pct((area.capturado / area.programado) * 100) : 0;
-        return `
-          <div class="list-item">
-            <div>
-              <strong>${area.nombre}</strong>
-              <span>${fmt.format(area.capturado)} de ${fmt.format(area.programado)} capturados</span>
-            </div>
-            <span class="tag ${areaPct >= 80 ? 'good' : areaPct >= 50 ? 'warn' : 'bad'}">${areaPct}%</span>
-          </div>
-        `;
-      }).join('');
-
-      const statusChart = document.getElementById('statusChart');
-      const estatus = Array.isArray(data.estatus) ? data.estatus : [];
-      statusChart.innerHTML = estatus.map((item) => {
-        const max = Math.max(...estatus.map((row) => Number(row.valor || 0)), 1);
-        const width = Math.max(8, Math.round((Number(item.valor || 0) / max) * 100));
+      barsNode.innerHTML = transitionRows.map((item) => {
+        const width = Math.max(8, Math.round((item.total / max) * 100));
         return `
           <div class="barline">
-            <div class="name">${item.nombre}</div>
-            <div class="track"><div class="fill" style="width:${width}%; background: linear-gradient(90deg, ${item.clase === 'good' ? '#96e2b8' : item.clase === 'warn' ? '#ffd37a' : item.clase === 'bad' ? '#ff8ea0' : '#a83a5e'}, rgba(122,33,65,0.9));"></div></div>
-            <div class="num">${fmt.format(item.valor)}</div>
+            <div class="name">${escapeHtml(item.transi)}</div>
+            <div class="track"><div class="fill" style="width:${width}%"></div></div>
+            <div class="num">${fmt.format(item.total)}</div>
           </div>
         `;
-      }).join('');
+      }).join("");
 
-      const alertsList = document.getElementById('alertsList');
-      const alerts = Array.isArray(data.alertas) ? data.alertas : [];
-      alertsList.innerHTML = alerts.map((alert) => `
-        <div class="list-item">
-          <div>
-            <strong>${alert.titulo}</strong>
-            <span>${alert.detalle}</span>
-          </div>
-          <span class="tag ${alert.tag || 'info'}">${(alert.tag || 'info').toUpperCase()}</span>
-        </div>
-      `).join('');
-
-      const topAreasChart = document.getElementById('topAreasChart');
-      renderBars(topAreasChart, [...areas].sort((a, b) => Number(b.capturado || 0) - Number(a.capturado || 0)).slice(0, 5), 'capturado');
+      tableNode.innerHTML = transitionRows.map((item) => `
+        <tr>
+          <td>${escapeHtml(item.transi)}</td>
+          <td>${fmt.format(item.total)}</td>
+        </tr>
+      `).join("");
     }
 
-    main();
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function initMap() {
+      if (state.map) return;
+
+      state.map = L.map("map", { zoomControl: true }).setView([19.37, -99.22], 11);
+      const base = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 20,
+        attribution: "&copy; OpenStreetMap contributors"
+      }).addTo(state.map);
+
+      state.mapLayers.base = base;
+      state.mapLayers.points = L.layerGroup().addTo(state.map);
+      state.mapLayers.secciones = L.layerGroup().addTo(state.map);
+      state.mapLayers.colonias = L.layerGroup().addTo(state.map);
+
+      state.mapLayers.control = L.control.layers(
+        { "Mapa base": base },
+        {
+          "Secciones (transi)": state.mapLayers.secciones,
+          "UT Colonias": state.mapLayers.colonias,
+          "Puntos por AREA": state.mapLayers.points
+        },
+        { collapsed: false }
+      ).addTo(state.map);
+    }
+
+    function transiColor(transiValue) {
+      const key = normalizeText(transiValue);
+      if (key === "aa") return "#4f8a76";
+      if (key === "ba") return "#6f4f88";
+      if (key === "bb") return "#93556f";
+      if (key === "cc") return "#b27739";
+      if (key === "dd") return "#b44d56";
+      return "#7f7f8f";
+    }
+
+    async function loadBaseGeoLayers() {
+      const [seccionesData, coloniasData] = await Promise.all([
+        fetchWithRetry("./secciones.geojson", 2).catch(() => null),
+        fetchWithRetry("./ut_colonias.geojson", 2).catch(() => null)
+      ]);
+
+      state.mapLayers.secciones.clearLayers();
+      state.mapLayers.colonias.clearLayers();
+
+      if (seccionesData) {
+        L.geoJSON(seccionesData, {
+          style: (feature) => {
+            const transi = getValueByAliases(feature?.properties || {}, ["transi"], "");
+            return {
+              color: transiColor(transi),
+              weight: 1.2,
+              fillOpacity: 0.2
+            };
+          },
+          onEachFeature: (feature, layer) => {
+            const props = feature?.properties || {};
+            const seccion = getValueByAliases(props, ["seccion"], "N/A");
+            const transi = getValueByAliases(props, ["transi"], "N/A");
+            layer.bindPopup(`<strong>Seccion:</strong> ${escapeHtml(seccion)}<br><strong>Transi:</strong> ${escapeHtml(transi)}`);
+          }
+        }).addTo(state.mapLayers.secciones);
+      }
+
+      if (coloniasData) {
+        L.geoJSON(coloniasData, {
+          style: {
+            color: "#4e6878",
+            weight: 1,
+            fillOpacity: 0.03,
+            fillColor: "#cfe4ee"
+          },
+          onEachFeature: (feature, layer) => {
+            const props = feature?.properties || {};
+            const nombre = getValueByAliases(props, ["NOMBRE"], "Sin nombre");
+            const clave = getValueByAliases(props, ["CLAVE UT"], "N/A");
+            layer.bindPopup(`<strong>UT:</strong> ${escapeHtml(nombre)}<br><strong>Clave:</strong> ${escapeHtml(clave)}`);
+          }
+        }).addTo(state.mapLayers.colonias);
+      }
+    }
+
+    function renderPointLayer() {
+      const pointsLayer = state.mapLayers.points;
+      pointsLayer.clearLayers();
+
+      const rows = getFilteredRows().filter((row) => row.lat !== null && row.lon !== null);
+
+      for (const row of rows) {
+        const color = colorFromArea(row.area);
+        const marker = L.circleMarker([row.lat, row.lon], {
+          radius: 5,
+          color,
+          weight: 1.4,
+          fillColor: color,
+          fillOpacity: 0.78
+        });
+
+        marker.bindPopup(
+          `<strong>AREA:</strong> ${escapeHtml(row.area)}<br><strong>Transicion:</strong> ${escapeHtml(row.transi)}<br><strong>Lat/Lon:</strong> ${row.lat.toFixed(6)}, ${row.lon.toFixed(6)}`
+        );
+
+        marker.addTo(pointsLayer);
+      }
+
+      if (rows.length > 0) {
+        const bounds = L.featureGroup(rows.map((row) => L.marker([row.lat, row.lon]))).getBounds();
+        if (bounds.isValid()) {
+          state.map.fitBounds(bounds.pad(0.15));
+        }
+      }
+
+      renderAreaLegend(rows);
+    }
+
+    function renderAreaLegend(rows) {
+      const legendNode = document.getElementById("areaLegend");
+      const areas = uniq(rows.map((row) => row.area)).sort((a, b) => a.localeCompare(b, "es"));
+      if (areas.length === 0) {
+        legendNode.innerHTML = '<span class="muted">No hay puntos georreferenciados para el filtro actual.</span>';
+        return;
+      }
+
+      legendNode.innerHTML = areas.map((area) => {
+        const color = colorFromArea(area);
+        return `<span class="legend-item"><span class="swatch" style="background:${color}"></span>${escapeHtml(area)}</span>`;
+      }).join("");
+    }
+
+    function rerenderAll() {
+      renderSummary();
+      renderTransitions();
+      renderPointLayer();
+    }
+
+    async function loadDashboardData() {
+      const sourceCandidates = buildSourceCandidates();
+      let loaded = null;
+      let usedSource = "";
+      let lastError = null;
+
+      for (const source of sourceCandidates) {
+        try {
+          loaded = await fetchWithRetry(source, 3);
+          usedSource = source;
+          break;
+        } catch (error) {
+          lastError = error;
+        }
+      }
+
+      if (!loaded) {
+        throw new Error(`No fue posible cargar datos. ${String(lastError?.message || "Error desconocido")}`);
+      }
+
+      state.activeSource = usedSource;
+      state.rawData = loaded;
+      state.rows = getRowsFromData(loaded).map(normalizeRow);
+      state.areasMeta = buildAreaMeta(loaded);
+
+      if (state.rows.length === 0 && Array.isArray(loaded?.areas) && loaded.areas.length > 0) {
+        state.rows = loaded.areas.flatMap((item) => {
+          const area = String(item?.nombre || "Sin AREA");
+          const capturado = Math.max(0, asNumber(item?.capturado, 0));
+          return Array.from({ length: capturado }, () => ({
+            area,
+            transi: "Sin transicion",
+            lat: null,
+            lon: null,
+            source: item
+          }));
+        });
+      }
+
+      renderAreaFilter();
+
+      const usedRemote = usedSource && usedSource !== "./avance.json";
+      const statusText = usedRemote
+        ? `Conectado al repositorio remoto: ${usedSource}`
+        : "Conectado a fuente local ./avance.json";
+      setStatus("ok", statusText);
+    }
+
+    async function initializeDashboard() {
+      initMap();
+      await loadBaseGeoLayers();
+
+      try {
+        await loadDashboardData();
+        rerenderAll();
+      } catch (error) {
+        setStatus("bad", `Error de carga: ${escapeHtml(String(error?.message || "Sin detalle"))}`);
+        document.getElementById("filterSummary").textContent = "No se pudieron cargar datos del consolidado.";
+        document.getElementById("transitionBars").innerHTML = '<div class="muted">Sin datos para mostrar.</div>';
+        document.getElementById("transitionTable").innerHTML = '<tr><td colspan="2" class="muted">Sin datos</td></tr>';
+        document.getElementById("areaLegend").innerHTML = '<span class="muted">Sin puntos para mostrar.</span>';
+      }
+    }
+
+    function wireEvents() {
+      const areaFilter = document.getElementById("areaFilter");
+      areaFilter.addEventListener("change", (event) => {
+        state.selectedArea = event.target.value || "__ALL__";
+        rerenderAll();
+      });
+
+      const sourceInput = document.getElementById("sourceInput");
+      const savedSource = localStorage.getItem(SOURCE_STORAGE_KEY) || "";
+      sourceInput.value = savedSource;
+
+      document.getElementById("saveSourceBtn").addEventListener("click", async () => {
+        const value = sourceInput.value.trim();
+        if (value) {
+          localStorage.setItem(SOURCE_STORAGE_KEY, value);
+        } else {
+          localStorage.removeItem(SOURCE_STORAGE_KEY);
+        }
+
+        setStatus("", "Recargando fuente de datos...");
+        try {
+          await loadDashboardData();
+          rerenderAll();
+        } catch (error) {
+          setStatus("bad", `No se pudo conectar: ${escapeHtml(String(error?.message || "sin detalle"))}`);
+        }
+      });
+    }
+
+    wireEvents();
+    initializeDashboard();
   </script>
 </body>
 </html>
