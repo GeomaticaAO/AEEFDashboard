@@ -1,0 +1,115 @@
+{
+  "generated_at": "2026-05-28T20:24:18Z",
+  "total_programado": 120000,
+  "total_capturado": 61,
+  "total_pendiente": 119939,
+  "total_sincronizado": 61,
+  "total_en_progreso": 61,
+  "total_alertas": 1,
+  "areas": [
+    {
+      "nombre": "3163",
+      "capturado": 14,
+      "programado": 14
+    },
+    {
+      "nombre": "3165",
+      "capturado": 10,
+      "programado": 10
+    },
+    {
+      "nombre": "3164",
+      "capturado": 10,
+      "programado": 10
+    },
+    {
+      "nombre": "3166",
+      "capturado": 8,
+      "programado": 8
+    },
+    {
+      "nombre": "3167",
+      "capturado": 7,
+      "programado": 7
+    },
+    {
+      "nombre": "3179",
+      "capturado": 2,
+      "programado": 2
+    },
+    {
+      "nombre": "3182",
+      "capturado": 2,
+      "programado": 2
+    },
+    {
+      "nombre": "3193",
+      "capturado": 1,
+      "programado": 1
+    },
+    {
+      "nombre": "3183",
+      "capturado": 1,
+      "programado": 1
+    },
+    {
+      "nombre": "3169",
+      "capturado": 1,
+      "programado": 1
+    },
+    {
+      "nombre": "3184",
+      "capturado": 1,
+      "programado": 1
+    },
+    {
+      "nombre": "3172",
+      "capturado": 1,
+      "programado": 1
+    },
+    {
+      "nombre": "3177",
+      "capturado": 1,
+      "programado": 1
+    },
+    {
+      "nombre": "3173",
+      "capturado": 1,
+      "programado": 1
+    },
+    {
+      "nombre": "3178",
+      "capturado": 1,
+      "programado": 1
+    }
+  ],
+  "estatus": [
+    {
+      "nombre": "Capturados",
+      "valor": 0,
+      "clase": "good"
+    },
+    {
+      "nombre": "Sincronizados",
+      "valor": 61,
+      "clase": "info"
+    },
+    {
+      "nombre": "En progreso",
+      "valor": 61,
+      "clase": "warn"
+    },
+    {
+      "nombre": "Pendientes",
+      "valor": 119939,
+      "clase": "bad"
+    }
+  ],
+  "alertas": [
+    {
+      "titulo": "Registros en progreso",
+      "detalle": "Hay 61 registros con estatus en progreso.",
+      "tag": "info"
+    }
+  ]
+}
